@@ -3,14 +3,16 @@ from optparse import OptionParser
 from socket import *
 import sys
 import time
+import random
 
+'''
 class MyWriter(object):
     def __init__(self, *files):
         self.files = files
     def write(self, obj):
         for f in self.files:
             f.write(obj)
-
+'''
 def h2ip(host):
     try:
         host=host.strip("\n \"\'")
@@ -103,15 +105,36 @@ if __name__=="__main__":
         if options.host==None:
             with open(options.targetsfile) as f:
                 hosts = f.readlines()
+                random.shuffle(hosts)
         elif options.targetsfile==None:
             host = options.host
         else:
             parser.print_help()
             sys.exit()
         ports=(options.ports).split(",")
+        random.shuffle(ports)
+
         try:
             ports=list(filter(int, ports))
             try:
+                for host in hosts:
+                    random.shuffle(ports)
+                    ip=h2ip(host)
+                    if ip:
+                        output("[+] Running scan on %s"%host)
+                        output("[+] Target IP: %s"%ip)
+                        c=len(ports)
+                        random.shuffle(ports)
+                        for port in ports:
+                            scan(ip, int(port))
+                            c-=1
+                            if c>=1:
+                                time.sleep(float(interval))
+                        output("")
+
+                    else:
+                        output("[!] Invalid host %s"%host)
+            except NameError:
                 ip=h2ip(host)
                 if ip:
                     output("[+] Running scan on %s"%host)
@@ -124,21 +147,9 @@ if __name__=="__main__":
                             time.sleep(float(interval))
                 else:
                     output("[!] Invalid host %s"%host)
-            except NameError:
-                for host in hosts:
-                    ip=h2ip(host)
-                    if ip:
-                        output("[+] Running scan on %s"%host)
-                        output("[+] Target IP: %s"%ip)
-                        c=len(ports)
-                        for port in ports:
-                            scan(ip, int(port))
-                            c-=1
-                            if c>=1:
-                                time.sleep(float(interval))
-                        output("")
 
-                    else:
-                        output("[!] Invalid host %s"%host)
-        except Exception as e:
-            output(e)
+
+        except KeyboardInterrupt:
+            output("Interrupted by User")
+            sys.exit()
+
