@@ -93,6 +93,8 @@ if __name__=="__main__":
                     print("[+] Target IP: %s"%ip)
                     for port in ports:
                         scan(ip, int(port))
+                        time.sleep(float(interval))
+                        print("")
                 else:
                     print("[!] Invalid host %s"%host)
             except NameError:
