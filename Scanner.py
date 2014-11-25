@@ -78,6 +78,8 @@ if __name__=="__main__":
                       help="enter host name", metavar="hede.com")
     parser.add_option("-p", "--port", dest="ports", type="string",
                       help="port you want to scan separated by comma", metavar="PORT")
+    parser.add_option("-P", "--port-list", dest="portsfile", type="string",
+                      help="ports file you want to scan separated one line", metavar="/tmp/portfile")
     parser.add_option("-T", "--target-list", dest="targetsfile", type="string",
                       help="file that contains targets one line", metavar="/tmp/hostlist")
     parser.add_option("-i", "--interval", dest="interval", type="string",
@@ -111,25 +113,26 @@ if __name__=="__main__":
         else:
             parser.print_help()
             sys.exit()
-        ports=(options.ports).split(",")
+        if options.portsfile==None:
+            ports=(options.ports).split(",")
+        else:
+            with open(options.portsfile) as f:
+                ports = f.readlines()
         random.shuffle(ports)
 
         try:
             ports=list(filter(int, ports))
+            random.shuffle(ports)
+            c=len(ports)
             try:
                 for host in hosts:
-                    random.shuffle(ports)
                     ip=h2ip(host)
                     if ip:
                         output("[+] Running scan on %s"%host)
                         output("[+] Target IP: %s"%ip)
-                        c=len(ports)
-                        random.shuffle(ports)
-                        for port in ports:
-                            scan(ip, int(port))
-                            c-=1
-                            if c>=1:
-                                time.sleep(float(interval))
+                        scan(ip, int(ports[c-1]))
+                        c-=1
+                        time.sleep(float(interval))
                         output("")
 
                     else:
