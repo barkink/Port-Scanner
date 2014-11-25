@@ -4,9 +4,15 @@ from socket import *
 import sys
 import time
 
+class MyWriter(object):
+    def __init__(self, *files):
+        self.files = files
+    def write(self, obj):
+        for f in self.files:
+            f.write(obj)
+
 def h2ip(host):
     try:
-        #print host
         host=host.strip("\n \"\'")
         ip=gethostbyname(host)
         return ip
@@ -35,7 +41,7 @@ def scan(host, port):
     sock=connecto(host, port)
     setdefaulttimeout(2) # set default timeout to 5 sec
     if sock:
-        print("[+] Connected to %s:%d"%(host, port))
+        output("[+] Connected to %s:%d"%(host, port))
         #try:
         #    cop = bg
         #except NameError:
@@ -43,15 +49,25 @@ def scan(host, port):
         if bg:
             banner=bgrabber(sock)
             if banner:
-                print("[+] Banner: %s"%banner)
+                output("[+] Banner: %s"%banner)
             else:
-                print("[!] Can't grab the target banner")
+                output("[!] Can't grab the target banner")
             sock.close() # Done
 
     else:
-        print("[!] Can't connect to %s:%d"%(host, port))
+        output("[!] Can't connect to %s:%d"%(host, port))
         
-        
+def output(text):
+    global write_to_file
+    print(text)
+    #if write_to_file == False:
+    #    print(text)
+    #else:
+        #with open(write_to_file,"a") as s:
+        #    #original = sys.stdout
+        #    sys.stdout = MyWriter(sys.stdout, s)
+        #    print(text)
+
 
 if __name__=="__main__":
     parser=OptionParser()
@@ -66,12 +82,21 @@ if __name__=="__main__":
                       help="scanning time interval, default is 1 sec", metavar="")
     parser.add_option("-b", "--print-banner", action="store_true", dest="bg", default=False,
                       help="Grab the banner")
+    parser.add_option("-f", "--print-output", type="string", dest="write_to_file",
+                      help="Write output to file also", metavar="/tmp/outputfile")
     (options, args)=parser.parse_args()
     bg=options.bg
+
     if options.interval == None:
         interval = 1
     else:
         interval = options.interval
+
+    if options.write_to_file == None:
+        write_to_file = False
+    else:
+        write_to_file = options.write_to_file
+
     if options.ports==None or (options.targetsfile==None and options.host==None):
         parser.print_help()
     else:
@@ -89,30 +114,31 @@ if __name__=="__main__":
             try:
                 ip=h2ip(host)
                 if ip:
-                    print("[+] Running scan on %s"%host)
-                    print("[+] Target IP: %s"%ip)
+                    output("[+] Running scan on %s"%host)
+                    output("[+] Target IP: %s"%ip)
+                    c=len(ports)
                     for port in ports:
                         scan(ip, int(port))
-                        time.sleep(float(interval))
-                        print("")
+                        c-=1
+                        if c>=1:
+                            time.sleep(float(interval))
                 else:
-                    print("[!] Invalid host %s"%host)
+                    output("[!] Invalid host %s"%host)
             except NameError:
                 for host in hosts:
                     ip=h2ip(host)
-                    #print("IP:%s"%ip)
                     if ip:
-                        print("[+] Running scan on %s"%host)
-                        print("[+] Target IP: %s"%ip)
+                        output("[+] Running scan on %s"%host)
+                        output("[+] Target IP: %s"%ip)
                         c=len(ports)
                         for port in ports:
                             scan(ip, int(port))
                             c-=1
-                            if c!=1:
+                            if c>=1:
                                 time.sleep(float(interval))
-                        print("")
+                        output("")
 
                     else:
-                        print("[!] Invalid host %s"%host)
+                        output("[!] Invalid host %s"%host)
         except Exception as e:
-            print e
+            output(e)
