@@ -101,7 +101,7 @@ if __name__=="__main__":
     else:
         write_to_file = options.write_to_file
 
-    if options.ports==None or (options.targetsfile==None and options.host==None):
+    if (options.ports==None and options.portsfile==None) or (options.targetsfile==None and options.host==None):
         parser.print_help()
     else:
         if options.host==None:
