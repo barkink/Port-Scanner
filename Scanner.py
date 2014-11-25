@@ -104,9 +104,12 @@ if __name__=="__main__":
                     if ip:
                         print("[+] Running scan on %s"%host)
                         print("[+] Target IP: %s"%ip)
+                        c=len(ports)
                         for port in ports:
                             scan(ip, int(port))
-                            time.sleep(float(interval))
+                            c-=1
+                            if c!=1:
+                                time.sleep(float(interval))
                         print("")
 
                     else:
