@@ -126,6 +126,8 @@ if __name__=="__main__":
             c=len(ports)
             try:
                 for host in hosts:
+                    if c==0:
+                        c=len(ports)
                     ip=h2ip(host)
                     if ip:
                         output("[+] Running scan on %s"%host)
